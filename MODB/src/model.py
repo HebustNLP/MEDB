@@ -1,4 +1,4 @@
-from util import *
+from .util import *
 
 class BertForModel(BertPreTrainedModel):
     def __init__(self, config, _num_labels):
@@ -37,5 +37,3 @@ class BertForModel(BertPreTrainedModel):
             else:
                 pooled_output = self.feature_transform(pooled_output)
                 return pooled_output, logits
-                    
-

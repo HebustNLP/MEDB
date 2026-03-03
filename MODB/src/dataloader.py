@@ -1,4 +1,4 @@
-from util import *
+from .util import *
 
 
 def set_seed(seed):

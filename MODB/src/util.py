@@ -19,6 +19,10 @@ from torch.utils.data import (DataLoader, RandomSampler, SequentialSampler, Tens
 from datetime import datetime
 from sklearn.metrics import confusion_matrix, f1_score, accuracy_score
 
+# 项目根目录，用于输出路径（如 curve.pdf）
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
 def debug(data, manager_p, manager, args):
 
     print('-----------------Data--------------------')
@@ -154,7 +158,8 @@ def draw(x, y):
     ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
     ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
-def plot_curve(points):
+def plot_curve(points, save_dir=None):
+    """绘制决策边界曲线，保存到 save_dir 或项目 outputs 目录"""
     plt.rcParams['pdf.fonttype'] = 42
     plt.rcParams['ps.fonttype'] = 42
     centers = [[] for x in range(len(points[0]))]
@@ -178,7 +183,8 @@ def plot_curve(points):
     plt.ylabel(r'Decision Boundary $\Delta$', fontsize=12)
     plt.legend()
     plt.title('50% Known Classes on StackOverflow')
+    out_dir = save_dir or os.path.join(PROJECT_ROOT, 'outputs')
+    os.makedirs(out_dir, exist_ok=True)
+    curve_path = os.path.join(out_dir, 'curve.pdf')
+    plt.savefig(curve_path)
     plt.show()
-    plt.savefig('curve.pdf')
-    
-

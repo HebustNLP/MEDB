@@ -1,8 +1,16 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+MODB 主入口：多粒度粒球 + 开放集意图分类
+"""
+import random
+import numpy as np
+import torch
 
-from pretrain import *
-# from utils import util
-
-from gb_test import ModelManager
+from init_parameter import init_model
+from src.dataloader import Data
+from src.pretrain import PretrainModelManager
+from src.gb_test import ModelManager
 
 
 if __name__ == '__main__':
@@ -15,7 +23,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     data = Data(args)
 
-    # 训练前打印当前使用 GPU 还是 CPU（gpu_id 仅在检测到 GPU 时生效，否则使用 CPU）
     if torch.cuda.is_available():
         print(f'当前使用: GPU (cuda:{args.gpu_id}, device={torch.cuda.get_device_name(0)})')
     else:
@@ -30,7 +37,6 @@ if __name__ == '__main__':
     gb_centroids, gb_radii, gb_labels = manager_p1.calculate_granular_balls(args, data)
     print('Calculate ball finished!')
 
-    # 动态自适应决策边界：在多粒度球基础上学习边界
     boundary_loss = None
     if getattr(args, 'adaptive_boundary_epochs', 0) > 0:
         print('Train adaptive boundary begin...')
@@ -42,4 +48,3 @@ if __name__ == '__main__':
     print('Evaluation begin...')
     manager.evaluation(args, data, gb_centroids, gb_radii, gb_labels, mode="test", boundary_loss=boundary_loss)
     print('Evaluation finished!')
-    # util.summary_writer.close()

@@ -1,12 +1,11 @@
-from model import *
-from dataloader import *
-from util import *
-from myloss import *
-from adaptive_boundary_loss import AdaptiveBoundaryLoss
+from .model import *
+from .dataloader import *
+from .util import *
+from .myloss import *
+from .adaptive_boundary_loss import AdaptiveBoundaryLoss
 
 from sklearn.cluster import DBSCAN
 from sklearn.manifold import TSNE
-# from utils import util
 
 
 class PretrainModelManager:
@@ -90,7 +89,6 @@ class PretrainModelManager:
                     self.optimizer.step()
                     self.scheduler.step()
                     tr_loss += loss1.item()
-                    # util.summary_writer.add_scalar("Loss/loss1", loss1.item(), step+ epoch*batch_number)
                     nb_tr_examples += input_ids.size(0)
                     nb_tr_steps += 1
 
@@ -113,7 +111,6 @@ class PretrainModelManager:
                     loss2 = self.clusterLoss.forward(args,features,label_ids, type='loss', select=False)
                     self.optimizer2.zero_grad()
                     loss2.backward()
-                    # util.summary_writer.add_scalar("Loss/loss11", loss2.item(), step + epoch * batch_number)
 
                     self.optimizer2.step()
                     self.scheduler2.step()
@@ -247,17 +244,16 @@ class PretrainModelManager:
 
         if not os.path.exists(args.pretrain_dir):
             os.makedirs(args.pretrain_dir)
-        self.save_model = self.model.module if hasattr(self.model,
+        save_model = self.model.module if hasattr(self.model,
                                                        'module') else self.model
 
         model_file = os.path.join(args.pretrain_dir, WEIGHTS_NAME)
         model_config_file = os.path.join(args.pretrain_dir, CONFIG_NAME)
-        torch.save(self.save_model.state_dict(), model_file)
+        torch.save(save_model.state_dict(), model_file)
         with open(model_config_file, "w") as f:
-            f.write(self.save_model.config.to_json_string())
+            f.write(save_model.config.to_json_string())
 
 
 def calculate_distances(a, b):
     distances = torch.sqrt(torch.sum((a[:, None, :] - b[None, :, :]) ** 2, dim=2))
     return distances
-

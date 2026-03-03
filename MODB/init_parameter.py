@@ -49,8 +49,8 @@ def init_model():
     parser.add_argument("--num_train_epochs", type=int, default=10)
     parser.add_argument("--wait_patient", type=int, default=5, help="验证集无提升的容忍轮数，达此数则早停")
     parser.add_argument("--save_model", action="store_true", help="是否保存预训练权重")
-    parser.add_argument("--pretrain_dir", type=str, default="saved", help="预训练模型保存目录")
-    parser.add_argument("--save_results_path", type=str, default="results", help="测试结果与混淆矩阵保存目录")
+    parser.add_argument("--pretrain_dir", type=str, default="outputs/saved", help="预训练模型保存目录")
+    parser.add_argument("--save_results_path", type=str, default="outputs/results", help="测试结果与混淆矩阵保存目录")
 
     # 优化器与学习率
     parser.add_argument("--lr", type=float, default=2e-5, help="BERT 编码器学习率")
