@@ -1,0 +1,13 @@
+# 让非 root 用户能访问 /dev/nvidia-caps/*，以解决 CUDA 802 (system not yet initialized)。
+# 仅当「nvidia-smi 正常、PyTorch 仍 802」且用 sudo 运行 python 时 CUDA 可用时使用。
+#
+# 安装（需 root）：
+#   sudo cp 70-nvidia-caps-permissions.rules /etc/udev/rules.d/
+#   sudo udevadm control --reload-rules && sudo udevadm trigger
+# 然后重新登录或重启，再试：python -c "import torch; print(torch.cuda.is_available())"
+#
+# 若本机没有 video 组，可改为 GROUP="render" 或 MODE="0644"（所有用户只读）。
+# 若规则不生效，可在本机执行：sudo udevadm info /dev/nvidia-caps/nvidia-cap1
+# 查看 SUBSYSTEM 等，必要时将下行的 nvidia-caps 改为实际值（如 misc）。
+
+KERNEL=="nvidia-cap[0-9]*", SUBSYSTEM=="nvidia-caps", MODE="0644"
