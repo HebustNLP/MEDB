@@ -37,14 +37,3 @@ sh examples/run_EliDecide.sh
 
 * 若无法从 HuggingFace transformers 直接下载预训练模型，需自行下载。可参考 TEXTOIR 提供的 [百度网盘链接](https://pan.baidu.com/s/1k1zxK4xh0UyPhOU_-oPlow)（提取码: v8tk）。
 
-## 基准数据集
-
-| 数据集 | 说明 |
-| :---: | :---: |
-| [BANKING](./data/banking) | 银行领域意图 |
-| [OOS](./data/oos) / [CLINC150](./data/clinc) | 通用对话意图 |
-| [StackOverflow](./data/stackoverflow) | 技术问答意图 |
-
-## 引用
-
-若使用本代码，请引用相关论文。
