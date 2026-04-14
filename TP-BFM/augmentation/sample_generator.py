@@ -69,12 +69,15 @@ class SampleGenerator:
         seed_examples: List[str],
         num_samples: int = 100,
         batch_size: int = 10,
+        max_attempts: int = 50,
     ) -> List[str]:
    
         all_samples = []
         remaining = num_samples
+        attempts = 0
 
-        while remaining > 0:
+        while remaining > 0 and attempts < max_attempts:
+            attempts += 1
             current_batch = min(batch_size, remaining)
             prompt = self.prompt_builder.build_prompt(
                 class_name=class_name,
@@ -89,9 +92,18 @@ class SampleGenerator:
 
             # 解析生成的文本为独立样本
             samples = self._parse_generated_text(generated_text)
+            if not samples:
+                logger.warning(
+                    f"类别 '{class_name}' 第 {attempts} 次生成未解析出有效样本，继续重试"
+                )
+                continue
             all_samples.extend(samples)
             remaining -= len(samples)
 
+        if remaining > 0:
+            logger.warning(
+                f"类别 '{class_name}' 在 {attempts} 次尝试后仅生成 {len(all_samples)} 条样本"
+            )
         return all_samples[:num_samples]
 
     def generate_for_all_classes(
@@ -127,7 +139,8 @@ class SampleGenerator:
 
     def _generate_local(self, prompt: str) -> str:
         
-        inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
+        model_device = next(self.model.parameters()).device
+        inputs = self.tokenizer(prompt, return_tensors="pt").to(model_device)
 
         with torch.no_grad():
             outputs = self.model.generate(

@@ -42,7 +42,9 @@ class SoftLabelGenerator:
         label_list: List[str],
         batch_size: int = 16,
     ) -> np.ndarray:
-        
+        if not texts:
+            return np.zeros((0, len(label_list)), dtype=np.float32)
+
         all_soft_labels = []
 
         for i in tqdm(range(0, len(texts), batch_size), desc="生成软标签"):
@@ -50,6 +52,8 @@ class SoftLabelGenerator:
             batch_labels = self._compute_batch_soft_labels(batch_texts, label_list)
             all_soft_labels.append(batch_labels)
 
+        if not all_soft_labels:
+            return np.zeros((0, len(label_list)), dtype=np.float32)
         return np.concatenate(all_soft_labels, axis=0)
 
     def _compute_batch_soft_labels(
@@ -64,25 +68,17 @@ class SoftLabelGenerator:
     def _compute_local_soft_labels(
         self, texts: List[str], label_list: List[str]
     ) -> np.ndarray:
-       
-        # 获取每个标签名对应的第一个 token ID 作为 verbalizer
-        label_token_ids = []
-        for label in label_list:
-            tokens = self.tokenizer.encode(label, add_special_tokens=False)
-            label_token_ids.append(tokens[0])
+        # 构建标签-词元一一映射 V
+        label_token_ids = self._build_label_verbalizer(label_list)
 
         soft_labels = np.zeros((len(texts), len(label_list)))
 
         for idx, text in enumerate(texts):
-            # 构建分类提示
-            prompt = (
-                f"Classify the following text into one of these categories: "
-                f"{', '.join(label_list)}\n"
-                f"Text: \"{text}\"\n"
-                f"Category:"
-            )
+            # 构建任务提示 J(x, S)
+            prompt = self._build_classification_prompt(text, label_list)
 
-            inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
+            model_device = next(self.model.parameters()).device
+            inputs = self.tokenizer(prompt, return_tensors="pt").to(model_device)
 
             with torch.no_grad():
                 outputs = self.model(**inputs)
@@ -95,6 +91,42 @@ class SoftLabelGenerator:
             soft_labels[idx] = label_probs
 
         return soft_labels
+
+    def _build_label_verbalizer(self, label_list: List[str]) -> List[int]:
+        """构建标签词具体化器 V: C -> vocab。"""
+        token_ids: List[int] = []
+        used = set()
+        for label in label_list:
+            # 对生成模型，前置空格通常更接近独立词元边界
+            tokens = self.tokenizer.encode(" " + label, add_special_tokens=False)
+            if not tokens:
+                raise ValueError(f"标签无法映射到词元: {label}")
+            tok = None
+            for candidate in tokens:
+                if candidate not in used:
+                    tok = candidate
+                    break
+            if tok is None:
+                # 回退尝试不带前置空格的 token 序列
+                alt = self.tokenizer.encode(label, add_special_tokens=False)
+                for candidate in alt:
+                    if candidate not in used:
+                        tok = candidate
+                        break
+            if tok is None:
+                raise ValueError(f"标签词元冲突，无法构建一一映射: {label}")
+            used.add(tok)
+            token_ids.append(tok)
+        return token_ids
+
+    @staticmethod
+    def _build_classification_prompt(text: str, label_list: List[str]) -> str:
+        return (
+            "Classify the following text into one of these categories: "
+            f"{', '.join(label_list)}\n"
+            f"Text: \"{text}\"\n"
+            "Category:"
+        )
 
     def _compute_openai_soft_labels(
         self, texts: List[str], label_list: List[str]

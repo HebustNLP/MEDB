@@ -67,7 +67,7 @@ class TuplePromptBuilder:
         prompt = f"{system_instruction}\n\n{examples_text}\n{generation_instruction}"
         return prompt
 
-
+   
     def build_soft_label_prompt(self, text: str, label_list: List[str]) -> str:
        
         labels_str = ", ".join(label_list)

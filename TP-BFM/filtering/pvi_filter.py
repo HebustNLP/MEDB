@@ -250,7 +250,7 @@ class PVIFilter:
 
         kept = len(filtered_texts)
         logger.info(
-            f"PVI 过滤: 总计 {total} 样本, 保留 {kept} ({kept/total*100:.1f}%)"
+            f"PVI 过滤: 总计 {total} 样本, 保留 {kept} ({(kept/total*100) if total else 0.0:.1f}%)"
         )
 
         return filtered_texts, filtered_labels

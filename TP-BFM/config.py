@@ -39,6 +39,7 @@ class FilterConfig:
     """过滤机制相关配置"""
     # 软标签置信度过滤
     confidence_threshold: float = 0.8  # δ: 置信度阈值
+    label_mismatch_strategy: str = "drop"  # 不一致样本处理: drop / correct
     # PVI 过滤
     pvi_model_name: str = "bert-base-uncased"
     pvi_learning_rate: float = 2e-5
@@ -57,23 +58,7 @@ class ModelConfig:
     dropout: float = 0.1
 
 
-@dataclass
-class TrainingConfig:
-    """训练相关配置"""
-    # 表征学习阶段
-    repr_learning_rate: float = 2e-5
-    repr_epochs: int = 100
-    repr_batch_size: int = 128
-    repr_warmup_ratio: float = 0.1
-    # 边界学习阶段
-    boundary_learning_rate: float = 0.001
-    boundary_epochs: int = 50
-    boundary_batch_size: int = 128
-    # 通用
-    seed: int = 42
-    device: str = "cuda"
-    num_workers: int = 4
-    save_dir: str = "./checkpoints"
+
 
 
 @dataclass

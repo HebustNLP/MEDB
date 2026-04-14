@@ -20,12 +20,18 @@ class ConfidenceFilter:
     仅保留满足 conf(x') > δ 的样本
     """
 
-    def __init__(self, threshold: float = 0.5):
+    def __init__(self, threshold: float = 0.5, label_mismatch_strategy: str = "drop"):
         """
         Args:
             threshold: 置信度阈值 δ
+            label_mismatch_strategy:
+                - "drop": 剔除生成标签与软标签预测不一致样本
+                - "correct": 使用软标签预测标签进行修正
         """
         self.threshold = threshold
+        if label_mismatch_strategy not in {"drop", "correct"}:
+            raise ValueError("label_mismatch_strategy must be 'drop' or 'correct'")
+        self.label_mismatch_strategy = label_mismatch_strategy
 
     def filter(
         self,
@@ -73,11 +79,11 @@ class ConfidenceFilter:
             if conf <= self.threshold:
                 continue
 
-            # 可选：检查生成标签与软标签预测一致性
+            # 检查生成标签与软标签预测一致性
             if pred_label_name != labels[i]:
                 label_mismatch += 1
-                # 论文提到可以剔除或修正不一致的样本
-                # 此处选择使用软标签预测的标签
+                if self.label_mismatch_strategy == "drop":
+                    continue
                 corrected_label = pred_label_name
             else:
                 corrected_label = labels[i]
@@ -89,7 +95,7 @@ class ConfidenceFilter:
 
         logger.info(
             f"置信度过滤: 总计 {total} 样本, "
-            f"保留 {kept} ({kept/total*100:.1f}%), "
+            f"保留 {kept} ({(kept/total*100) if total else 0.0:.1f}%), "
             f"标签不一致 {label_mismatch} 个"
         )
 
